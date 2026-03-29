@@ -54,8 +54,13 @@ public final class UriNormalizer {
                         uri.getQuery(), uri.getFragment());
     }
     
+    private static URI stripQuery(URI uri) {
+        return rebuild(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath(), null, uri.getFragment());
+    }
+
     public static URI normalize(URI uri) {
         uri = stripFragment(uri);
+        uri = stripQuery(uri);
         uri = stripTrailingSlash(uri);
         uri = stripDefaultPort(uri);
         return lowercaseHostAndScheme(uri);

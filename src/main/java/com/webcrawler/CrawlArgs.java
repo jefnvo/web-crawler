@@ -5,6 +5,8 @@ public record CrawlArgs(String url, boolean concurrent, int maxConcurrentRequest
     public static final int DEFAULT_MAX_CONCURRENCY = 1000;
 
     public static CrawlArgs parse(String[] args) {
+        int threads;
+        
         if (args == null || args.length == 0) {
             throw new IllegalArgumentException("Usage: web-crawler <url> [faster [<threads>]]");
         }
@@ -23,7 +25,6 @@ public record CrawlArgs(String url, boolean concurrent, int maxConcurrentRequest
             return new CrawlArgs(url, true, DEFAULT_MAX_CONCURRENCY);
         }
 
-        int threads;
         try {
             threads = Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {

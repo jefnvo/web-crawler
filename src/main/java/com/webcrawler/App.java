@@ -2,8 +2,8 @@ package com.webcrawler;
 
 import com.webcrawler.domain.port.in.CrawlUseCase;
 import com.webcrawler.domain.service.CrawlController;
-import com.webcrawler.domain.service.frontier.BfsFrontier;
-import com.webcrawler.domain.service.frontier.ConcurrentBfsFrontier;
+import com.webcrawler.domain.service.DefaultPageProcessor;
+import com.webcrawler.domain.service.PageProcessor;
 import com.webcrawler.domain.service.strategy.ConcurrentCrawlStrategy;
 import com.webcrawler.domain.service.strategy.CrawlStrategy;
 import com.webcrawler.domain.service.strategy.SequentialCrawlStrategy;
@@ -24,16 +24,17 @@ public class App {
             return;
         }
 
-        var config    = HttpClientConfig.defaults();
-        var fetcher   = new HttpPageFetcher(config);
+        var config = HttpClientConfig.defaults();
+        var fetcher = new HttpPageFetcher(config);
         var extractor = new JsoupLinkExtractor();
-        var reporter  = new InstrumentedReporter(new ConsoleResultReporter());
+        PageProcessor pageProcessor = new DefaultPageProcessor(fetcher, extractor);
+
+        var printer = new ConsoleResultReporter();
+        var reporter = new InstrumentedReporter(printer);
 
         CrawlStrategy strategy = crawlArgs.concurrent()
-            ? new ConcurrentCrawlStrategy(fetcher, extractor, reporter,
-                                          new ConcurrentBfsFrontier(),
-                                          crawlArgs.maxConcurrentRequests())
-            : new SequentialCrawlStrategy(fetcher, extractor, reporter, new BfsFrontier());
+            ? new ConcurrentCrawlStrategy(pageProcessor, reporter, crawlArgs.maxConcurrentRequests())
+            : new SequentialCrawlStrategy(pageProcessor, reporter);
 
         CrawlUseCase crawler = new CrawlController(strategy);
         crawler.crawl(crawlArgs.url());

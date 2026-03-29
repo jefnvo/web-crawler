@@ -5,10 +5,6 @@ import com.webcrawler.domain.port.out.ResultReporter;
 import java.net.URI;
 import java.util.Set;
 
-/**
- * Pure output reporter — prints each visited page and its discovered links.
- * No state, no metrics. Wrap with InstrumentedReporter to add crawl statistics.
- */
 public class ConsoleResultReporter implements ResultReporter {
 
     @Override

@@ -17,7 +17,8 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.webcrawler.domain.port.out.ResultReporter;
 import com.webcrawler.domain.service.CrawlController;
-import com.webcrawler.domain.service.frontier.ConcurrentBfsFrontier;
+import com.webcrawler.domain.service.DefaultPageProcessor;
+import com.webcrawler.domain.service.PageProcessor;
 import com.webcrawler.domain.service.strategy.ConcurrentCrawlStrategy;
 import com.webcrawler.infra.adapter.out.http.HttpPageFetcher;
 import com.webcrawler.infra.adapter.out.parser.JsoupLinkExtractor;
@@ -32,9 +33,11 @@ class CrawlerIntegrationTest {
 
 
     private CrawlController crawlerWith(CapturingResultReporter reporter) {
-        var fetcher   = new HttpPageFetcher(TEST_HTTP_CONFIG);
+        var fetcher = new HttpPageFetcher(TEST_HTTP_CONFIG);
         var extractor = new JsoupLinkExtractor();
-        var strategy  = new ConcurrentCrawlStrategy(fetcher, extractor, reporter, new ConcurrentBfsFrontier());
+        PageProcessor pageProcessor = new DefaultPageProcessor(fetcher, extractor);
+        
+        var strategy = new ConcurrentCrawlStrategy(pageProcessor, reporter, 1);
         return new CrawlController(strategy);
     }
 

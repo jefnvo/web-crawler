@@ -17,4 +17,5 @@ public final class UriFixtures {
     public static final URI PAGE_A = URI.create("https://crawlme.monzo.com/a");
     public static final URI PAGE_B = URI.create("https://crawlme.monzo.com/b");
     public static final URI PAGE_C = URI.create("https://crawlme.monzo.com/c");
-}
+    public static final URI EXTERNAL_PAGE = URI.create("https://external.com/");
+}   

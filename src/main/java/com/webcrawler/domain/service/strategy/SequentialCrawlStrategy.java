@@ -1,72 +1,60 @@
 package com.webcrawler.domain.service.strategy;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import com.webcrawler.domain.port.out.LinkExtractor;
 import com.webcrawler.domain.port.out.PageFetchException;
-import com.webcrawler.domain.port.out.PageFetcher;
 import com.webcrawler.domain.port.out.ResultReporter;
+import com.webcrawler.domain.service.PageProcessor;
+import com.webcrawler.domain.service.frontier.BfsFrontier;
 import com.webcrawler.domain.service.frontier.Frontier;
 import com.webcrawler.domain.util.CrawlScope;
 import com.webcrawler.domain.util.UriNormalizer;
 
-/**
- * Traversal order is determined by the injected Frontier
- * swap BfsFrontier for a DfsFrontier or PriorityFrontier.
- */
 public class SequentialCrawlStrategy implements CrawlStrategy {
 
     private static final Logger LOG = Logger.getLogger(SequentialCrawlStrategy.class.getName());
 
-    private final PageFetcher fetcher;
-    private final LinkExtractor extractor;
+    private final PageProcessor processor;
     private final ResultReporter reporter;
-    private final Frontier frontier;
+    private final Supplier<Frontier> frontierFactory;
 
-    public SequentialCrawlStrategy(PageFetcher fetcher, LinkExtractor extractor,
-                                   ResultReporter reporter, Frontier frontier) {
-        this.fetcher   = fetcher;
-        this.extractor = extractor;
-        this.reporter  = reporter;
-        this.frontier  = frontier;
+    public SequentialCrawlStrategy(PageProcessor processor, ResultReporter reporter) {
+        this(processor, reporter, BfsFrontier::new);
+    }
+
+    public SequentialCrawlStrategy(PageProcessor processor, ResultReporter reporter, Supplier<Frontier> frontierFactory) {
+        this.processor = processor;
+        this.reporter = reporter;
+        this.frontierFactory = frontierFactory;
     }
 
     @Override
     public void crawl(URI start) {
-        var normalizedStart = UriNormalizer.normalize(start);
-        var scope           = new CrawlScope(normalizedStart.getHost());
-        Map<URI, Integer> depths = new HashMap<>();
-
-        depths.put(normalizedStart, 0);
-        frontier.add(normalizedStart);
+        var normalized = UriNormalizer.normalize(start);
+        var scope = new CrawlScope(normalized.getHost());
+        var frontier = frontierFactory.get();
+        frontier.offer(normalized, 0);
 
         while (!frontier.isEmpty()) {
-            frontier.poll().ifPresent(uri -> {
-                try {
-                    processPage(uri, scope, depths);
-                } catch (PageFetchException e) {
-                    LOG.warning("Failed to fetch: " + uri + " — " + e.getMessage());
-                }
-            });
+            var uri = frontier.poll();
+            try {
+                processPage(uri, scope, frontier);
+            } catch (PageFetchException e) {
+                LOG.warning("Failed to fetch: " + uri + " — " + e.getMessage());
+            }
         }
 
         reporter.summarize();
     }
 
-    private void processPage(URI uri, CrawlScope scope, Map<URI, Integer> depths) {
-        int depth    = depths.getOrDefault(uri, 0);
-        var html     = fetcher.fetch(uri);
-        var newLinks = extractor.extract(uri, html).stream()
-                                .filter(scope::isInScope)
-                                .map(UriNormalizer::normalize)
-                                .filter(link -> depths.putIfAbsent(link, depth + 1) == null)
+    private void processPage(URI uri, CrawlScope scope, Frontier frontier) {
+        int depth = frontier.depthOf(uri);
+        var newLinks = processor.fetchLinks(uri, scope).stream()
+                                .filter(link -> frontier.offer(link, depth + 1))
                                 .collect(Collectors.toUnmodifiableSet());
-
         reporter.report(uri, newLinks, depth);
-        newLinks.forEach(frontier::add);
     }
 }

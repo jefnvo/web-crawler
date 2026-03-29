@@ -1,68 +1,95 @@
 package com.webcrawler.domain.service.frontier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import com.webcrawler.fixtures.UriFixtures;
 
 public class ConcurrentBfsFrontierTest {
 
-    private final Frontier frontier = new ConcurrentBfsFrontier();
+    private Frontier frontier;
+
+    @BeforeEach
+    void setUp() {
+        frontier = new ConcurrentBfsFrontier();
+    }
 
     @Test
-    void shouldBeEmptyInitially() {
+    void shouldStartEmpty() {
         assertTrue(frontier.isEmpty());
+        assertNull(frontier.poll());
     }
 
     @Test
-    void shouldReturnEmptyOptionalWhenPolledEmpty() {
-        assertTrue(frontier.poll().isEmpty());
+    void shouldReturnTrueWhenOfferingNewUri() {
+        assertTrue(frontier.offer(UriFixtures.PAGE, 0));
     }
 
     @Test
-    void shouldNotBeEmptyAfterAdd() {
-        frontier.add(UriFixtures.PAGE_A);
-        assertTrue(!frontier.isEmpty());
+    void shouldReturnFalseForDuplicateUri() {
+        frontier.offer(UriFixtures.PAGE, 0);
+        assertFalse(frontier.offer(UriFixtures.PAGE, 0));
     }
 
     @Test
-    void shouldBeEmptyAfterAllElementsPolled() {
-        frontier.add(UriFixtures.PAGE_A);
+    void shouldNotEnqueueDuplicateUri() {
+        frontier.offer(UriFixtures.PAGE, 0);
+        frontier.offer(UriFixtures.PAGE, 0);
         frontier.poll();
         assertTrue(frontier.isEmpty());
     }
 
+    @Test
+    void shouldTrackDepthOfOfferedUri() {
+        frontier.offer(UriFixtures.PAGE, 3);
+        assertEquals(3, frontier.depthOf(UriFixtures.PAGE));
+    }
+
+    @Timeout(5)
     @RepeatedTest(20)
-    void shouldAcceptConcurrentAddsWithoutDataLoss() throws InterruptedException {
-        var uris = List.of(UriFixtures.PAGE_A, UriFixtures.PAGE_B, UriFixtures.PAGE_C);
-        var latch = new CountDownLatch(1);
+    void shouldNotLoseUrisUnderConcurrentOffers() throws InterruptedException {
+        int threadCount = 50;
+        List<URI> uris = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            uris.add(URI.create("https://crawlme.monzo.com/page-" + i));
+        }
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (var uri : uris) {
-                executor.submit(() -> {
-                    latch.await();
-                    frontier.add(uri);
-                    return null;
-                });
+                executor.submit(() -> frontier.offer(uri, 1));
             }
-            latch.countDown();
         }
 
-        List<URI> polled = new ArrayList<>();
-        frontier.poll().ifPresent(polled::add);
-        frontier.poll().ifPresent(polled::add);
-        frontier.poll().ifPresent(polled::add);
+        int count = 0;
+        while (!frontier.isEmpty()) {
+            frontier.poll();
+            count++;
+        }
+        assertEquals(threadCount, count);
+    }
 
-        assertEquals(3, polled.size());
-        assertTrue(polled.containsAll(uris));
+    @Timeout(5)
+    @RepeatedTest(20)
+    void shouldDeduplicateUnderConcurrentOffersOfSameUri() throws InterruptedException {
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (int i = 0; i < 50; i++) {
+                executor.submit(() -> frontier.offer(UriFixtures.PAGE, 0));
+            }
+        }
+
+        frontier.poll();
+        assertTrue(frontier.isEmpty());
     }
 }
