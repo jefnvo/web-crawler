@@ -28,7 +28,7 @@ public class CrawlArgsTest {
 
     @Test
     void shouldParseFasterModeWithExplicitThreadCount() {
-        var args = CrawlArgs.parse(new String[]{"https://example.com", "faster", "50"});
+        var args = CrawlArgs.parse(new String[]{"https://example.com", "faster", "--threads", "50"});
 
         assertTrue(args.concurrent());
         assertEquals(50, args.maxConcurrentRequests());
@@ -47,20 +47,77 @@ public class CrawlArgsTest {
     @Test
     void shouldThrowWhenThreadCountIsNotANumber() {
         assertThrows(IllegalArgumentException.class,
-                () -> CrawlArgs.parse(new String[]{"https://example.com", "faster", "abc"}));
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "faster", "--threads", "abc"}));
     }
 
     @Test
     void shouldThrowWhenThreadCountIsZeroOrNegative() {
         assertThrows(IllegalArgumentException.class,
-                () -> CrawlArgs.parse(new String[]{"https://example.com", "faster", "0"}));
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "faster", "--threads", "0"}));
         assertThrows(IllegalArgumentException.class,
-                () -> CrawlArgs.parse(new String[]{"https://example.com", "faster", "-5"}));
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "faster", "--threads", "-5"}));
+    }
+
+    @Test
+    void shouldThrowWhenThreadsFlagHasNoValue() {
+        assertThrows(IllegalArgumentException.class,
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "faster", "--threads"}));
     }
 
     @Test
     void shouldThrowWhenModeIsUnknown() {
         assertThrows(IllegalArgumentException.class,
                 () -> CrawlArgs.parse(new String[]{"https://example.com", "turbo"}));
+    }
+
+    @Test
+    void shouldDefaultToUnlimitedMaxPages() {
+        var args = CrawlArgs.parse(new String[]{"https://example.com"});
+
+        assertEquals(CrawlArgs.DEFAULT_MAX_PAGES, args.maxPages());
+    }
+
+    @Test
+    void shouldParseMaxPagesFlag() {
+        var args = CrawlArgs.parse(new String[]{"https://example.com", "--max-pages", "100"});
+
+        assertEquals(100, args.maxPages());
+    }
+
+    @Test
+    void shouldParseMaxPagesWithFaster() {
+        var args = CrawlArgs.parse(new String[]{"https://example.com", "faster", "--max-pages", "50"});
+
+        assertTrue(args.concurrent());
+        assertEquals(50, args.maxPages());
+    }
+
+    @Test
+    void shouldParseMaxPagesWithFasterAndThreads() {
+        var args = CrawlArgs.parse(new String[]{"https://example.com", "faster", "--threads", "10", "--max-pages", "200"});
+
+        assertTrue(args.concurrent());
+        assertEquals(10, args.maxConcurrentRequests());
+        assertEquals(200, args.maxPages());
+    }
+
+    @Test
+    void shouldThrowWhenMaxPagesFlagHasNoValue() {
+        assertThrows(IllegalArgumentException.class,
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "--max-pages"}));
+    }
+
+    @Test
+    void shouldThrowWhenMaxPagesIsNotANumber() {
+        assertThrows(IllegalArgumentException.class,
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "--max-pages", "abc"}));
+    }
+
+    @Test
+    void shouldThrowWhenMaxPagesIsZeroOrNegative() {
+        assertThrows(IllegalArgumentException.class,
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "--max-pages", "0"}));
+        assertThrows(IllegalArgumentException.class,
+                () -> CrawlArgs.parse(new String[]{"https://example.com", "--max-pages", "-5"}));
     }
 }

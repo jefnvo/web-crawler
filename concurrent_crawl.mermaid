@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant CrawlController
+    participant ConcurrentCrawlStrategy
+    participant ConcurrentBfsFrontier
+    participant Semaphore
+    participant PageProcessor as PageProcessor<br/>(port: out)
+    participant ResultReporter as ResultReporter<br/>(port: out)
+
+    CrawlController->>ConcurrentCrawlStrategy: crawl(uri)
+    ConcurrentCrawlStrategy->>ConcurrentBfsFrontier: offer(start, depth=0)
+
+    loop BFS wave — while !frontier.isEmpty()
+        ConcurrentCrawlStrategy->>ConcurrentBfsFrontier: drain -> List<Callable> wave
+
+        par virtual thread per URI in wave
+            ConcurrentCrawlStrategy->>Semaphore: acquire()
+            ConcurrentCrawlStrategy->>PageProcessor: fetchLinks(uri, scope) -> Set<URI>
+            loop each new link
+                ConcurrentCrawlStrategy->>ConcurrentBfsFrontier: offer(link, depth+1)
+            end
+            ConcurrentCrawlStrategy->>ResultReporter: report(uri, links, depth)
+            ConcurrentCrawlStrategy->>Semaphore: release()
+        end
+        Note over ConcurrentCrawlStrategy: invokeAll() — wave completes before next drain
+    end
+
+    ConcurrentCrawlStrategy->>ResultReporter: summarize()

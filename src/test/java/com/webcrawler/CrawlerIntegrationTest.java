@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,6 +16,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.webcrawler.domain.port.out.ResultReporter;
 import com.webcrawler.domain.service.CrawlController;
 import com.webcrawler.domain.service.DefaultPageProcessor;
+import com.webcrawler.domain.service.frontier.ConcurrentBfsFrontier;
 import com.webcrawler.domain.service.PageProcessor;
 import com.webcrawler.domain.service.strategy.ConcurrentCrawlStrategy;
 import com.webcrawler.infra.adapter.out.http.HttpPageFetcher;
@@ -37,7 +36,7 @@ class CrawlerIntegrationTest {
         var extractor = new JsoupLinkExtractor();
         PageProcessor pageProcessor = new DefaultPageProcessor(fetcher, extractor);
         
-        var strategy = new ConcurrentCrawlStrategy(pageProcessor, reporter, 1);
+        var strategy = new ConcurrentCrawlStrategy(pageProcessor, reporter, 1, Integer.MAX_VALUE, ConcurrentBfsFrontier::new);
         return new CrawlController(strategy);
     }
 
@@ -130,7 +129,7 @@ class CrawlerIntegrationTest {
     
     private static final class CapturingResultReporter implements ResultReporter {
 
-        private final Map<URI, Set<URI>> reports = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<URI, Set<URI>> reports = new ConcurrentHashMap<>();
 
         @Override
         public void report(URI visited, Set<URI> links, int depth) {
@@ -141,9 +140,5 @@ class CrawlerIntegrationTest {
             return reports.keySet();
         }
 
-        @SuppressWarnings("unused")
-        Map<URI, Set<URI>> allReports() {
-            return Collections.unmodifiableMap(reports);
-        }
     }
 }

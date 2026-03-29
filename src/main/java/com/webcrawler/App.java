@@ -4,6 +4,7 @@ import com.webcrawler.domain.port.in.CrawlUseCase;
 import com.webcrawler.domain.service.CrawlController;
 import com.webcrawler.domain.service.DefaultPageProcessor;
 import com.webcrawler.domain.service.PageProcessor;
+import com.webcrawler.domain.service.frontier.ConcurrentBfsFrontier;
 import com.webcrawler.domain.service.strategy.ConcurrentCrawlStrategy;
 import com.webcrawler.domain.service.strategy.CrawlStrategy;
 import com.webcrawler.domain.service.strategy.SequentialCrawlStrategy;
@@ -33,8 +34,8 @@ public class App {
         var reporter = new InstrumentedReporter(printer);
 
         CrawlStrategy strategy = crawlArgs.concurrent()
-            ? new ConcurrentCrawlStrategy(pageProcessor, reporter, crawlArgs.maxConcurrentRequests())
-            : new SequentialCrawlStrategy(pageProcessor, reporter);
+            ? new ConcurrentCrawlStrategy(pageProcessor, reporter, crawlArgs.maxConcurrentRequests(), crawlArgs.maxPages(), ConcurrentBfsFrontier::new)
+            : new SequentialCrawlStrategy(pageProcessor, reporter, crawlArgs.maxPages());
 
         CrawlUseCase crawler = new CrawlController(strategy);
         crawler.crawl(crawlArgs.url());

@@ -19,15 +19,17 @@ public class SequentialCrawlStrategy implements CrawlStrategy {
 
     private final PageProcessor processor;
     private final ResultReporter reporter;
+    private final int maxPages;
     private final Supplier<Frontier> frontierFactory;
 
-    public SequentialCrawlStrategy(PageProcessor processor, ResultReporter reporter) {
-        this(processor, reporter, BfsFrontier::new);
+    public SequentialCrawlStrategy(PageProcessor processor, ResultReporter reporter, int maxPages) {
+        this(processor, reporter, maxPages, BfsFrontier::new);
     }
 
-    public SequentialCrawlStrategy(PageProcessor processor, ResultReporter reporter, Supplier<Frontier> frontierFactory) {
+    public SequentialCrawlStrategy(PageProcessor processor, ResultReporter reporter, int maxPages, Supplier<Frontier> frontierFactory) {
         this.processor = processor;
         this.reporter = reporter;
+        this.maxPages = maxPages;
         this.frontierFactory = frontierFactory;
     }
 
@@ -38,10 +40,12 @@ public class SequentialCrawlStrategy implements CrawlStrategy {
         var frontier = frontierFactory.get();
         frontier.offer(normalized, 0);
 
-        while (!frontier.isEmpty()) {
+        int pagesVisited = 0;
+        while (!frontier.isEmpty() && pagesVisited < maxPages) {
             var uri = frontier.poll();
             try {
                 processPage(uri, scope, frontier);
+                pagesVisited++;
             } catch (PageFetchException e) {
                 LOG.warning("Failed to fetch: " + uri + " — " + e.getMessage());
             }

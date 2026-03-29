@@ -38,14 +38,15 @@ mvn test
 ## Run
 
 ```bash
-java -jar target/web-crawler-1.0-SNAPSHOT.jar <url> [faster [<threads>]]
+java -jar target/web-crawler-1.0-SNAPSHOT.jar <url> [faster [--threads <n>]] [--max-pages <n>]
 ```
 
 ### Parameters
 
 - **url (required)**: The starting URL. Crawling is restricted to its subdomain.
 - **faster (optional)**: Enables the concurrent strategy using virtual threads. If not specified, sequential will be used.
-- **threads (optional)**: Maximum number of concurrent in-flight requests. Only valid with `faster`. Default: `1000`.
+- **--threads (optional)**: Maximum number of concurrent in-flight requests. Only valid with `faster`. Default: `1000`.
+- **--max-pages (optional)**: Stop after visiting this many pages. Applies to both strategies. Default: unlimited. For the concurrent strategy this is a soft cap — the crawler completes the current wave before stopping, so the final count may exceed the limit by at most one wave size.
 
 ### Usage examples
 
@@ -57,5 +58,11 @@ java -jar target/web-crawler-1.0-SNAPSHOT.jar https://crawlme.monzo.com/
 java -jar target/web-crawler-1.0-SNAPSHOT.jar https://crawlme.monzo.com/ faster
 
 # Concurrent crawl with 50 concurrent requests
-java -jar target/web-crawler-1.0-SNAPSHOT.jar https://crawlme.monzo.com/ faster 50
+java -jar target/web-crawler-1.0-SNAPSHOT.jar https://crawlme.monzo.com/ faster --threads 50
+
+# Sequential crawl capped at 100 pages
+java -jar target/web-crawler-1.0-SNAPSHOT.jar https://crawlme.monzo.com/ --max-pages 100
+
+# Concurrent crawl capped at 500 pages with 50 threads
+java -jar target/web-crawler-1.0-SNAPSHOT.jar https://crawlme.monzo.com/ faster --threads 50 --max-pages 500
 ```

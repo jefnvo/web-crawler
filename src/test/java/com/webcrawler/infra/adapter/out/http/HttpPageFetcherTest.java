@@ -19,7 +19,7 @@ class HttpPageFetcherTest {
     private static final HttpClientConfig FAST_CONFIG = new HttpClientConfig(
             Duration.ofSeconds(5), Duration.ofSeconds(5), "TestCrawler/1.0", 3, 0L);
 
-    private HttpPageFetcher fetcher(WireMockRuntimeInfo wm) {
+    private HttpPageFetcher fetcher() {
         return new HttpPageFetcher(FAST_CONFIG);
     }
 
@@ -31,7 +31,7 @@ class HttpPageFetcherTest {
     void shouldReturnBodyOn200(WireMockRuntimeInfo wm) {
         stubFor(get("/page").willReturn(ok("hello")));
 
-        var body = fetcher(wm).fetch(url(wm, "/page"));
+        var body = fetcher().fetch(url(wm, "/page"));
 
         assertEquals("hello", body);
     }
@@ -40,7 +40,7 @@ class HttpPageFetcherTest {
     void shouldThrowImmediatelyOnNonRetryableStatus(WireMockRuntimeInfo wm) {
         stubFor(get("/page").willReturn(aResponse().withStatus(404)));
 
-        assertThrows(PageFetchException.class, () -> fetcher(wm).fetch(url(wm, "/page")));
+        assertThrows(PageFetchException.class, () -> fetcher().fetch(url(wm, "/page")));
 
         verify(1, getRequestedFor(urlEqualTo("/page")));
     }
@@ -59,7 +59,7 @@ class HttpPageFetcherTest {
                 .whenScenarioStateIs("third")
                 .willReturn(ok("recovered")));
 
-        var body = fetcher(wm).fetch(url(wm, "/page"));
+        var body = fetcher().fetch(url(wm, "/page"));
 
         assertEquals("recovered", body);
         verify(3, getRequestedFor(urlEqualTo("/page")));
@@ -69,7 +69,7 @@ class HttpPageFetcherTest {
     void shouldThrowAfterMaxRetriesExhausted(WireMockRuntimeInfo wm) {
         stubFor(get("/page").willReturn(aResponse().withStatus(503)));
 
-        assertThrows(PageFetchException.class, () -> fetcher(wm).fetch(url(wm, "/page")));
+        assertThrows(PageFetchException.class, () -> fetcher().fetch(url(wm, "/page")));
 
         verify(4, getRequestedFor(urlEqualTo("/page"))); // 1 attempt + 3 retries
     }

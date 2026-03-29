@@ -36,7 +36,7 @@ public class JsoupLinkExtractorTest {
     }
 
     @Test
-    void shoudlDeduplicateLinks() {
+    void shouldDeduplicateLinks() {
         var html = HtmlPages.htmlWithLinks(UriFixtures.MONZO_ABOUT.toString(), UriFixtures.MONZO_ABOUT.toString());
 
         var links = extractor.extract(UriFixtures.MONZO_ROOT_URI, html);

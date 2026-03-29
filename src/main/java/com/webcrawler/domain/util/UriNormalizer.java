@@ -12,7 +12,7 @@ public final class UriNormalizer {
         try {
             return new URI(scheme, null, host, port, path, query, fragment);
         } catch(URISyntaxException e) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Failed to rebuild URI: " + e.getMessage(), e);
         }
     }
 

@@ -4,47 +4,44 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.webcrawler.fixtures.UriFixtures;
+
 public class CrawlScopeTest {
+
+    private static final CrawlScope SCOPE = new CrawlScope(UriFixtures.MONZO_ROOT_URI.getHost());
 
     @Test
     void shouldAcceptUrlOnSameHost() {
-        var scope = new CrawlScope("crawlme.monzo.com");
-        assertTrue(scope.isInScope(URI.create("https://crawlme.monzo.com/about")));
+        assertTrue(SCOPE.isInScope(URI.create("https://crawlme.monzo.com/about")));
     }
 
     @Test
     void shouldRejectUrlOnDifferentHost() {
-         var scope = new CrawlScope("crawlme.monzo.com");
-         assertFalse(scope.isInScope(URI.create(("https://monzo.com/about"))));
+        assertFalse(SCOPE.isInScope(URI.create("https://monzo.com/about")));
     }
 
     @Test
     void shouldRejectSubdomainOfAllowedHost() {
-        var scope = new CrawlScope("crawlme.monzo.com");
-        assertFalse(scope.isInScope(URI.create("https://community.monzo.com/page")));
+        assertFalse(SCOPE.isInScope(URI.create("https://community.monzo.com/page")));
     }
 
     @Test
     void shouldRejectUriWithNoHost() {
-        var scope = new CrawlScope("crawlme.monzo.com");
-        assertFalse(scope.isInScope(URI.create("/relative/path")));
+        assertFalse(SCOPE.isInScope(URI.create("/relative/path")));
     }
 
     @Test
     void shouldRejectMailtoScheme() {
-        var scope = new CrawlScope("crawlme.monzo.com");
-        assertFalse(scope.isInScope(URI.create("mailto:support@crawlme.monzo.com")));
+        assertFalse(SCOPE.isInScope(URI.create("mailto:support@crawlme.monzo.com")));
     }
 
     @Test
     void shouldRejectFtpScheme() {
-        var scope = new CrawlScope("crawlme.monzo.com");
-        assertFalse(scope.isInScope(URI.create("ftp://crawlme.monzo.com/file.txt")));
+        assertFalse(SCOPE.isInScope(URI.create("ftp://crawlme.monzo.com/file.txt")));
     }
 
     @Test
     void shouldAcceptHttpScheme() {
-        var scope = new CrawlScope("crawlme.monzo.com");
-        assertTrue(scope.isInScope(URI.create("http://crawlme.monzo.com/page")));
+        assertTrue(SCOPE.isInScope(URI.create("http://crawlme.monzo.com/page")));
     }
 }

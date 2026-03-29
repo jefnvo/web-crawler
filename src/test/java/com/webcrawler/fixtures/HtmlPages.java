@@ -1,6 +1,6 @@
 package com.webcrawler.fixtures;
 
-public class HtmlPages {
+public final class HtmlPages {
     public static final String MINIMAL = "<html/>";
 
     public static String htmlWithLinks(String... hrefs) {

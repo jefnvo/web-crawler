@@ -4,11 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import java.net.URI;
-
 import org.junit.jupiter.api.Test;
 
 import com.webcrawler.domain.service.strategy.CrawlStrategy;
+import com.webcrawler.fixtures.UriFixtures;
 
 public class CrawlServiceTest {
     private final CrawlStrategy strategy = mock(CrawlStrategy.class);
@@ -36,7 +35,7 @@ public class CrawlServiceTest {
 
     @Test
     void shouldDelegateValidUrlToStrategy() {
-        service.crawl("https://crawlme.monzo.com/");
-        verify(strategy).crawl(URI.create("https://crawlme.monzo.com/"));
+        service.crawl(UriFixtures.MONZO);
+        verify(strategy).crawl(UriFixtures.MONZO_ROOT_URI);
     }
 }

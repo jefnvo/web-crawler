@@ -13,7 +13,7 @@ public final class UriFixtures {
     public static final URI MONZO_ABOUT_URI = URI.create(MONZO_ABOUT);
     public static final URI MONZO_BLOG_URI = URI.create(MONZO_BLOG);
 
-    public static final URI PAGE = URI.create("https://crawlme.monzo.com/");
+    public static final URI PAGE = MONZO_ROOT_URI;
     public static final URI PAGE_A = URI.create("https://crawlme.monzo.com/a");
     public static final URI PAGE_B = URI.create("https://crawlme.monzo.com/b");
     public static final URI PAGE_C = URI.create("https://crawlme.monzo.com/c");

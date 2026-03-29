@@ -10,7 +10,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.URI;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.Timeout;
 import com.webcrawler.domain.port.out.PageFetchException;
 import com.webcrawler.domain.port.out.ResultReporter;
 import com.webcrawler.domain.service.PageProcessor;
+import com.webcrawler.domain.service.frontier.ConcurrentBfsFrontier;
 import com.webcrawler.fixtures.UriFixtures;
 
 public class ConcurrentCrawlStrategyTest {
@@ -28,7 +28,7 @@ public class ConcurrentCrawlStrategyTest {
     private final ResultReporter reporter = mock(ResultReporter.class);
 
     private final CrawlStrategy strategy =
-            new ConcurrentCrawlStrategy(processor, reporter, 10);
+            new ConcurrentCrawlStrategy(processor, reporter, 10, Integer.MAX_VALUE, ConcurrentBfsFrontier::new);
 
     @Test
     void shouldVisitStartPageAndReportIt() {
@@ -51,12 +51,11 @@ public class ConcurrentCrawlStrategyTest {
 
     @Test
     void shouldNotFollowOutOfScopeLinks() {
-        var external = URI.create("https://facebook.com/");
         when(processor.fetchLinks(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of());
 
         strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
-        verify(processor, never()).fetchLinks(eq(external), any());
+        verify(processor, never()).fetchLinks(eq(UriFixtures.EXTERNAL_PAGE), any());
     }
 
     @Test
@@ -87,6 +86,17 @@ public class ConcurrentCrawlStrategyTest {
         strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
         verify(reporter).report(eq(UriFixtures.MONZO_ABOUT_URI), eq(Set.of()), anyInt());
+    }
+
+    @Test
+    void shouldStopAfterMaxPagesReached() {
+        when(processor.fetchLinks(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ABOUT_URI));
+        when(processor.fetchLinks(eq(UriFixtures.MONZO_ABOUT_URI), any())).thenReturn(Set.of());
+
+        var limited = new ConcurrentCrawlStrategy(processor, reporter, 10, 1, ConcurrentBfsFrontier::new);
+        limited.crawl(UriFixtures.MONZO_ROOT_URI);
+
+        verify(processor, times(1)).fetchLinks(any(), any());
     }
 
     @Timeout(5)

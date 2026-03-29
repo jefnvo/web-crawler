@@ -16,7 +16,7 @@ public class UriNormalizerTest {
     @Test
     void shouldStripTrailingSlash() {
         var uri = URI.create(UriFixtures.MONZO_ABOUT + "/");
-        assertEquals(URI.create(UriFixtures.MONZO_ABOUT), 
+        assertEquals(URI.create(UriFixtures.MONZO_ABOUT),
                     UriNormalizer.normalize(uri));
     }
 
@@ -30,24 +30,24 @@ public class UriNormalizerTest {
     }
 
     @Test
-    void shoudlStripFragmentAndTrailingSlash() {
-        var uri = URI.create(UriFixtures.MONZO_ABOUT + "#section");
+    void shouldStripFragmentAndTrailingSlash() {
+        var uri = URI.create(UriFixtures.MONZO_ABOUT + "/#section");
         assertEquals(UriFixtures.MONZO_ABOUT_URI,
                     UriNormalizer.normalize(uri));
     }
 
     @Test
-    void shouldStripeDefaultPort() {
+    void shouldStripDefaultPort() {
         var uri = URI.create("http://crawlme.monzo.com:80/page");
-        assertEquals(URI.create("http://crawlme.monzo.com/page"), 
+        assertEquals(URI.create("http://crawlme.monzo.com/page"),
                     UriNormalizer.normalize(uri));
     }
 
     @Test
     void shouldLowercaseSchemeAndHost() {
         var uri = URI.create("HTTPS://CrawlMe.Monzo.Com/About");
-        assertEquals(URI.create("https://crawlme.monzo.com/About"), 
+        assertEquals(URI.create("https://crawlme.monzo.com/About"),
                     UriNormalizer.normalize(uri));
     }
-    
+
 }

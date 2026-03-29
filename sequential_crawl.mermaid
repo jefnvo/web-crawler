@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant CrawlController
+    participant SequentialCrawlStrategy
+    participant BfsFrontier
+    participant PageProcessor as PageProcessor<br/>(port: out)
+    participant ResultReporter as ResultReporter<br/>(port: out)
+
+    CrawlController->>SequentialCrawlStrategy: crawl(uri)
+    SequentialCrawlStrategy->>BfsFrontier: offer(start, depth=0)
+
+    loop while !frontier.isEmpty()
+        SequentialCrawlStrategy->>BfsFrontier: poll() -> uri
+        SequentialCrawlStrategy->>PageProcessor: fetchLinks(uri, scope) -> Set<URI>
+        loop each new link
+            SequentialCrawlStrategy->>BfsFrontier: offer(link, depth+1)
+        end
+        SequentialCrawlStrategy->>ResultReporter: report(uri, links, depth)
+    end
+
+    SequentialCrawlStrategy->>ResultReporter: summarize()

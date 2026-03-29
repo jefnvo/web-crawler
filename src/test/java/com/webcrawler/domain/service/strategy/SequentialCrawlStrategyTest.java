@@ -10,7 +10,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.URI;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ public class SequentialCrawlStrategyTest {
     private final ResultReporter reporter  = mock(ResultReporter.class);
 
     private final CrawlStrategy strategy =
-            new SequentialCrawlStrategy(processor, reporter);
+            new SequentialCrawlStrategy(processor, reporter, Integer.MAX_VALUE);
 
     @Test
     void shouldVisitOnceSinglePage() {
@@ -51,12 +50,11 @@ public class SequentialCrawlStrategyTest {
 
     @Test
     void shouldNotFollowOutOfScopeLinks() {
-        var external = URI.create("https://facebook.com/");
         when(processor.fetchLinks(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of());
 
         strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
-        verify(processor, never()).fetchLinks(eq(external), any());
+        verify(processor, never()).fetchLinks(eq(UriFixtures.EXTERNAL_PAGE), any());
     }
 
     @Test
@@ -77,6 +75,17 @@ public class SequentialCrawlStrategyTest {
 
         assertDoesNotThrow(() -> strategy.crawl(UriFixtures.MONZO_ROOT_URI));
         verify(processor, times(1)).fetchLinks(eq(UriFixtures.MONZO_ABOUT_URI), any());
+    }
+
+    @Test
+    void shouldStopAfterMaxPagesReached() {
+        when(processor.fetchLinks(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ABOUT_URI));
+        when(processor.fetchLinks(eq(UriFixtures.MONZO_ABOUT_URI), any())).thenReturn(Set.of());
+
+        var limited = new SequentialCrawlStrategy(processor, reporter, 1);
+        limited.crawl(UriFixtures.MONZO_ROOT_URI);
+
+        verify(processor, times(1)).fetchLinks(any(), any());
     }
 
     @Test
