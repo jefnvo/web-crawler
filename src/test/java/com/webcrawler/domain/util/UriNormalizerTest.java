@@ -3,35 +3,36 @@ package com.webcrawler.domain.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.URI;
 import org.junit.jupiter.api.Test;
+import com.webcrawler.fixtures.UriFixtures;
 
 public class UriNormalizerTest {
     @Test
-    void shoudlStripFragment() {
-        var uri = URI.create("https://crawlme.monzo.com/about#section");
-        assertEquals(URI.create("https://crawlme.monzo.com/about"),
+    void shouldStripFragment() {
+        var uri = URI.create(UriFixtures.MONZO_ABOUT + "#section");
+        assertEquals(UriFixtures.MONZO_ABOUT_URI,
                     UriNormalizer.normalize(uri));
     }
 
     @Test
     void shouldStripTrailingSlash() {
-        var uri = URI.create("https://crawlme.monzo.com/about/");
-        assertEquals(URI.create("https://crawlme.monzo.com/about"), 
+        var uri = URI.create(UriFixtures.MONZO_ABOUT + "/");
+        assertEquals(URI.create(UriFixtures.MONZO_ABOUT), 
                     UriNormalizer.normalize(uri));
     }
 
     @Test
     void shouldKeepRootPathWhenNoTrailingSlashToStrip() {
-        var uri = URI.create("https://crawlme.monzo.com/");
+        var uri = URI.create(UriFixtures.MONZO + "/");
         assertEquals(
-            URI.create("https://crawlme.monzo.com/"),   // ← root slash must be kept
+            UriFixtures.MONZO_ROOT_URI,
             UriNormalizer.normalize(uri)
         );
     }
 
     @Test
     void shoudlStripFragmentAndTrailingSlash() {
-        var uri = URI.create("https://crawlme.monzo.com/about/#section");
-        assertEquals(URI.create("https://crawlme.monzo.com/about"),
+        var uri = URI.create(UriFixtures.MONZO_ABOUT + "#section");
+        assertEquals(UriFixtures.MONZO_ABOUT_URI,
                     UriNormalizer.normalize(uri));
     }
 

@@ -25,7 +25,7 @@ import com.webcrawler.domain.port.out.PageFetcher;
 import com.webcrawler.domain.port.out.ResultReporter;
 import com.webcrawler.domain.service.frontier.ConcurrentBfsFrontier;
 import com.webcrawler.fixtures.HtmlPages;
-import com.webcrawler.fixtures.Uris;
+import com.webcrawler.fixtures.UriFixtures;
 
 public class ConcurrentCrawlStrategyTest {
 
@@ -38,71 +38,70 @@ public class ConcurrentCrawlStrategyTest {
 
     @Test
     void shouldVisitStartPageAndReportIt() {
-        when(fetcher.fetch(Uris.MONZO_ROOT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ROOT), any())).thenReturn(Set.of());
+        when(fetcher.fetch(UriFixtures.MONZO_ROOT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of());
 
-        strategy.crawl(Uris.MONZO_ROOT);
-
-        verify(reporter).report(eq(Uris.MONZO_ROOT), eq(Set.of()), anyInt());
+        strategy.crawl(UriFixtures.MONZO_ROOT_URI);
+        verify(reporter).report(eq(UriFixtures.MONZO_ROOT_URI), eq(Set.of()), anyInt());
     }
 
     @Test
     void shouldFollowInScopeLinks() {
-        when(fetcher.fetch(Uris.MONZO_ROOT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ROOT), any())).thenReturn(Set.of(Uris.MONZO_ABOUT));
-        when(fetcher.fetch(Uris.MONZO_ABOUT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ABOUT), any())).thenReturn(Set.of());
+        when(fetcher.fetch(UriFixtures.MONZO_ROOT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ABOUT_URI));
+        when(fetcher.fetch(UriFixtures.MONZO_ABOUT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ABOUT_URI), any())).thenReturn(Set.of());
+        
+        strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
-        strategy.crawl(Uris.MONZO_ROOT);
-
-        verify(fetcher, times(1)).fetch(Uris.MONZO_ROOT);
-        verify(fetcher, times(1)).fetch(Uris.MONZO_ABOUT);
+        verify(fetcher, times(1)).fetch(UriFixtures.MONZO_ROOT_URI);
+        verify(fetcher, times(1)).fetch(UriFixtures.MONZO_ABOUT_URI);
     }
 
     @Test
     void shouldNotFollowOutOfScopeLinks() {
         var external = URI.create("https://facebook.com/");
-        when(fetcher.fetch(Uris.MONZO_ROOT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ROOT), any())).thenReturn(Set.of(external));
+        when(fetcher.fetch(UriFixtures.MONZO_ROOT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(external));
 
-        strategy.crawl(Uris.MONZO_ROOT);
+        strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
         verify(fetcher, never()).fetch(external);
     }
 
     @RepeatedTest(30)
     void shouldNotRevisitAlreadyVisitedPages() {
-        when(fetcher.fetch(Uris.MONZO_ROOT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ROOT), any())).thenReturn(Set.of(Uris.MONZO_ABOUT));
-        when(fetcher.fetch(Uris.MONZO_ABOUT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ABOUT), any())).thenReturn(Set.of(Uris.MONZO_ROOT));
+        when(fetcher.fetch(UriFixtures.MONZO_ROOT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ABOUT_URI));
+        when(fetcher.fetch(UriFixtures.MONZO_ABOUT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ABOUT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ROOT_URI));
 
-        strategy.crawl(Uris.MONZO_ROOT);
+        strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
-        verify(fetcher, times(1)).fetch(Uris.MONZO_ROOT);
-        verify(fetcher, times(1)).fetch(Uris.MONZO_ABOUT);
+        verify(fetcher, times(1)).fetch(UriFixtures.MONZO_ROOT_URI);
+        verify(fetcher, times(1)).fetch(UriFixtures.MONZO_ABOUT_URI);
     }
 
     @Test
     void shouldContinueWhenAPageFetchFails() {
-        when(fetcher.fetch(Uris.MONZO_ROOT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ROOT), any())).thenReturn(Set.of(Uris.MONZO_ABOUT));
-        when(fetcher.fetch(Uris.MONZO_ABOUT)).thenThrow(new PageFetchException("timeout"));
+        when(fetcher.fetch(UriFixtures.MONZO_ROOT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ABOUT_URI));
+        when(fetcher.fetch(UriFixtures.MONZO_ABOUT_URI)).thenThrow(new PageFetchException("timeout"));
 
-        assertDoesNotThrow(() -> strategy.crawl(Uris.MONZO_ROOT));
-        verify(fetcher, times(1)).fetch(Uris.MONZO_ABOUT);
+        assertDoesNotThrow(() -> strategy.crawl(UriFixtures.MONZO_ROOT_URI));
+        verify(fetcher, times(1)).fetch(UriFixtures.MONZO_ABOUT_URI);
     }
 
     @Test
     void shouldReportOnlyNewlyDiscoveredLinks() {
-        when(fetcher.fetch(Uris.MONZO_ROOT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ROOT), any())).thenReturn(Set.of(Uris.MONZO_ABOUT));
-        when(fetcher.fetch(Uris.MONZO_ABOUT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ABOUT), any())).thenReturn(Set.of(Uris.MONZO_ROOT));
+        when(fetcher.fetch(UriFixtures.MONZO_ROOT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ABOUT_URI));
+        when(fetcher.fetch(UriFixtures.MONZO_ABOUT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ABOUT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ROOT_URI));
 
-        strategy.crawl(Uris.MONZO_ROOT);
+        strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
-        verify(reporter).report(eq(Uris.MONZO_ABOUT), eq(Set.of()), anyInt());
+        verify(reporter).report(eq(UriFixtures.MONZO_ABOUT_URI), eq(Set.of()), anyInt());
     }
 
     @Timeout(5)
@@ -110,25 +109,25 @@ public class ConcurrentCrawlStrategyTest {
     void shouldFetchDiscoveredPagesConcurrently() throws InterruptedException {
         var bothInFlight = new CountDownLatch(2);
 
-        when(fetcher.fetch(Uris.MONZO_ROOT)).thenReturn(HtmlPages.MINIMAL);
-        when(extractor.extract(eq(Uris.MONZO_ROOT), any())).thenReturn(Set.of(Uris.MONZO_ABOUT, Uris.MONZO_BLOG));
+        when(fetcher.fetch(UriFixtures.MONZO_ROOT_URI)).thenReturn(HtmlPages.MINIMAL);
+        when(extractor.extract(eq(UriFixtures.MONZO_ROOT_URI), any())).thenReturn(Set.of(UriFixtures.MONZO_ABOUT_URI, UriFixtures.MONZO_BLOG_URI));
 
-        when(fetcher.fetch(Uris.MONZO_ABOUT)).thenAnswer(inv -> {
+        when(fetcher.fetch(UriFixtures.MONZO_ABOUT_URI)).thenAnswer(inv -> {
             bothInFlight.countDown();
             bothInFlight.await(2, TimeUnit.SECONDS);
             return HtmlPages.MINIMAL;
         });
-        when(fetcher.fetch(Uris.MONZO_BLOG)).thenAnswer(inv -> {
+        when(fetcher.fetch(UriFixtures.MONZO_BLOG_URI)).thenAnswer(inv -> {
             bothInFlight.countDown();
             bothInFlight.await(2, TimeUnit.SECONDS);
             return HtmlPages.MINIMAL;
         });
-        when(extractor.extract(eq(Uris.MONZO_ABOUT), any())).thenReturn(Set.of());
-        when(extractor.extract(eq(Uris.MONZO_BLOG), any())).thenReturn(Set.of());
+        when(extractor.extract(eq(UriFixtures.MONZO_ABOUT_URI), any())).thenReturn(Set.of());
+        when(extractor.extract(eq(UriFixtures.MONZO_BLOG_URI), any())).thenReturn(Set.of());
 
-        strategy.crawl(Uris.MONZO_ROOT);
+        strategy.crawl(UriFixtures.MONZO_ROOT_URI);
 
-        verify(fetcher, times(1)).fetch(Uris.MONZO_ABOUT);
-        verify(fetcher, times(1)).fetch(Uris.MONZO_BLOG);
+        verify(fetcher, times(1)).fetch(UriFixtures.MONZO_ABOUT_URI);
+        verify(fetcher, times(1)).fetch(UriFixtures.MONZO_BLOG_URI);
     }
 }

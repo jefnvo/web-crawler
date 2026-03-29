@@ -41,9 +41,6 @@ class CrawlerIntegrationTest {
     @Test
     @Timeout(10)
     void shouldCrawlAllReachablePagesWithinSameSubdomain(WireMockRuntimeInfo wm) {
-        // Site graph:  /  →  /about, /contact
-        //              /about  →  /faq
-        //              /contact, /faq  →  (no outbound links)
         stubFor(get("/").willReturn(ok(HtmlPages.htmlWithLinks("/about", "/contact"))));
         stubFor(get("/about").willReturn(ok(HtmlPages.htmlWithLinks("/faq"))));
         stubFor(get("/contact").willReturn(ok(HtmlPages.htmlWithLinks())));
@@ -101,7 +98,6 @@ class CrawlerIntegrationTest {
     @Test
     @Timeout(10)
     void shouldContinueCrawlingAfterFetchFailure(WireMockRuntimeInfo wm) {
-        // /bad returns a non-retryable 404; the crawler must not abort — /good must still be visited.
         stubFor(get("/").willReturn(ok(HtmlPages.htmlWithLinks("/good", "/bad"))));
         stubFor(get("/good").willReturn(ok(HtmlPages.htmlWithLinks())));
         stubFor(get("/bad").willReturn(aResponse().withStatus(404)));
@@ -118,10 +114,9 @@ class CrawlerIntegrationTest {
     @Test
     @Timeout(10)
     void shouldNormalizeUrisAndDeduplicateBeforeEnqueuing(WireMockRuntimeInfo wm) {
-        // Both hrefs canonicalise to /page via UriNormalizer — only one HTTP request must be made.
         stubFor(get("/").willReturn(ok(HtmlPages.htmlWithLinks(
-                "/page/",        // trailing slash  → strips to /page
-                "/page#section"  // fragment        → strips to /page
+                "/page/",      
+                "/page#section" 
         ))));
         stubFor(get("/page").willReturn(ok(HtmlPages.htmlWithLinks())));
 
@@ -129,17 +124,7 @@ class CrawlerIntegrationTest {
 
         verify(1, getRequestedFor(urlEqualTo("/page")));
     }
-
-    // ── Test double ───────────────────────────────────────────────────────────
-
-    /**
-     * Thread-safe reporter that accumulates every (visited, newLinks) pair
-     * reported by the strategy. Used instead of ConsoleResultReporter so tests
-     * can assert on what was actually crawled without parsing stdout.
-     *
-     * ConcurrentHashMap is required because ParallelBfsCrawlStrategy calls
-     * report() from multiple virtual threads simultaneously.
-     */
+    
     private static final class CapturingResultReporter implements ResultReporter {
 
         private final Map<URI, Set<URI>> reports = new ConcurrentHashMap<>();

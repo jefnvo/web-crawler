@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
-import com.webcrawler.fixtures.Uris;
+import com.webcrawler.fixtures.UriFixtures;
 
 public class ConcurrentBfsFrontierTest {
 
@@ -30,20 +30,20 @@ public class ConcurrentBfsFrontierTest {
 
     @Test
     void shouldNotBeEmptyAfterAdd() {
-        frontier.add(Uris.PAGE_A);
+        frontier.add(UriFixtures.PAGE_A);
         assertTrue(!frontier.isEmpty());
     }
 
     @Test
     void shouldBeEmptyAfterAllElementsPolled() {
-        frontier.add(Uris.PAGE_A);
+        frontier.add(UriFixtures.PAGE_A);
         frontier.poll();
         assertTrue(frontier.isEmpty());
     }
 
     @RepeatedTest(20)
     void shouldAcceptConcurrentAddsWithoutDataLoss() throws InterruptedException {
-        var uris = List.of(Uris.PAGE_A, Uris.PAGE_B, Uris.PAGE_C);
+        var uris = List.of(UriFixtures.PAGE_A, UriFixtures.PAGE_B, UriFixtures.PAGE_C);
         var latch = new CountDownLatch(1);
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.webcrawler.domain.port.out.ResultReporter;
-import com.webcrawler.fixtures.Uris;
+import com.webcrawler.fixtures.UriFixtures;
 
 public class InstrumentedReporterTest {
 
@@ -35,9 +35,9 @@ public class InstrumentedReporterTest {
 
     @Test
     void shouldDelegateReportToInnerReporter() {
-        reporter.report(Uris.PAGE, Set.of(Uris.PAGE_A), 0);
+        reporter.report(UriFixtures.PAGE, Set.of(UriFixtures.PAGE_A), 0);
 
-        verify(delegate).report(Uris.PAGE, Set.of(Uris.PAGE_A), 0);
+        verify(delegate).report(UriFixtures.PAGE, Set.of(UriFixtures.PAGE_A), 0);
     }
 
     @Test
@@ -49,9 +49,9 @@ public class InstrumentedReporterTest {
 
     @Test
     void shouldAccumulatePageCount() {
-        reporter.report(Uris.PAGE, Set.of(), 0);
-        reporter.report(Uris.PAGE_A,    Set.of(), 1);
-        reporter.report(Uris.PAGE_B,    Set.of(), 2);
+        reporter.report(UriFixtures.PAGE, Set.of(), 0);
+        reporter.report(UriFixtures.PAGE_A,    Set.of(), 1);
+        reporter.report(UriFixtures.PAGE_B,    Set.of(), 2);
         reporter.summarize();
 
         assertTrue(out.toString().contains("3"), "summary must show 3 pages visited");
@@ -59,9 +59,9 @@ public class InstrumentedReporterTest {
 
     @Test
     void shouldTrackMaxDepth() {
-        reporter.report(Uris.PAGE, Set.of(), 0);
-        reporter.report(Uris.PAGE_A,    Set.of(), 3);
-        reporter.report(Uris.PAGE_B,    Set.of(), 1);
+        reporter.report(UriFixtures.PAGE, Set.of(), 0);
+        reporter.report(UriFixtures.PAGE_A,    Set.of(), 3);
+        reporter.report(UriFixtures.PAGE_B,    Set.of(), 1);
         reporter.summarize();
 
         assertTrue(out.toString().contains("3"), "summary must show max depth of 3");
@@ -69,8 +69,8 @@ public class InstrumentedReporterTest {
 
     @Test
     void shouldPrintSummaryAfterDelegateSummarize() {
-        reporter.report(Uris.PAGE, Set.of(Uris.PAGE_A), 0);
-        reporter.report(Uris.PAGE_A,    Set.of(), 1);
+        reporter.report(UriFixtures.PAGE, Set.of(UriFixtures.PAGE_A), 0);
+        reporter.report(UriFixtures.PAGE_A,    Set.of(), 1);
         reporter.summarize();
 
         var output = out.toString();

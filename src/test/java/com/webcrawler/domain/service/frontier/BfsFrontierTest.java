@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-import com.webcrawler.fixtures.Uris;
+import com.webcrawler.fixtures.UriFixtures;
 
 public class BfsFrontierTest {
 
@@ -23,24 +23,24 @@ public class BfsFrontierTest {
 
     @Test
     void shouldNotBeEmptyAfterAdd() {
-        frontier.add(Uris.PAGE_A);
+        frontier.add(UriFixtures.PAGE_A);
         assertTrue(!frontier.isEmpty());
     }
 
     @Test
     void shouldReturnUriInFifoOrder() {
-        frontier.add(Uris.PAGE_A);
-        frontier.add(Uris.PAGE_B);
-        frontier.add(Uris.PAGE_C);
+        frontier.add(UriFixtures.PAGE_A);
+        frontier.add(UriFixtures.PAGE_B);
+        frontier.add(UriFixtures.PAGE_C);
 
-        assertEquals(Uris.PAGE_A, frontier.poll().orElseThrow());
-        assertEquals(Uris.PAGE_B, frontier.poll().orElseThrow());
-        assertEquals(Uris.PAGE_C, frontier.poll().orElseThrow());
+        assertEquals(UriFixtures.PAGE_A, frontier.poll().orElseThrow());
+        assertEquals(UriFixtures.PAGE_B, frontier.poll().orElseThrow());
+        assertEquals(UriFixtures.PAGE_C, frontier.poll().orElseThrow());
     }
 
     @Test
     void shouldBeEmptyAfterAllElementsPolled() {
-        frontier.add(Uris.PAGE_A);
+        frontier.add(UriFixtures.PAGE_A);
         frontier.poll();
         assertTrue(frontier.isEmpty());
     }

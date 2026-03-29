@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.webcrawler.fixtures.Uris;
+import com.webcrawler.fixtures.UriFixtures;
 
 public class ConsoleResultReporterTest {
 
@@ -31,16 +31,16 @@ public class ConsoleResultReporterTest {
 
     @Test
     void shouldPrintVisitedUrlAndLinks() {
-        reporter.report(Uris.PAGE, Set.of(Uris.PAGE_A, Uris.PAGE_B), 0);
+        reporter.report(UriFixtures.PAGE, Set.of(UriFixtures.PAGE_A, UriFixtures.PAGE_B), 0);
 
         var output = out.toString();
-        assertTrue(output.contains("[VISITED] " + Uris.PAGE));
-        assertTrue(output.contains(Uris.PAGE_A.toString()) || output.contains(Uris.PAGE_B.toString()));
+        assertTrue(output.contains("[VISITED] " + UriFixtures.PAGE));
+        assertTrue(output.contains(UriFixtures.PAGE_A.toString()) || output.contains(UriFixtures.PAGE_B.toString()));
     }
 
     @Test
     void shouldPrintNoLinksMessageWhenFoundLinksIsEmpty() {
-        reporter.report(Uris.PAGE, Set.of(), 0);
+        reporter.report(UriFixtures.PAGE, Set.of(), 0);
 
         assertTrue(out.toString().contains("no links"));
     }
