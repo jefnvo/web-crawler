@@ -42,7 +42,7 @@ public class SequentialCrawlStrategy implements CrawlStrategy {
 
         int pagesVisited = 0;
         while (!frontier.isEmpty() && pagesVisited < maxPages) {
-            var uri = frontier.poll();
+            var uri = frontier.pickWork();
             try {
                 processPage(uri, scope, frontier);
                 pagesVisited++;

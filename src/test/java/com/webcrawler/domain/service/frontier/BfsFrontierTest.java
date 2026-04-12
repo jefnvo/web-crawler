@@ -22,7 +22,7 @@ public class BfsFrontierTest {
     @Test
     void shouldStartEmpty() {
         assertTrue(frontier.isEmpty());
-        assertNull(frontier.poll());
+        assertNull(frontier.pickWork());
     }
 
     @Test
@@ -45,13 +45,13 @@ public class BfsFrontierTest {
     @Test
     void shouldPollOfferedUri() {
         frontier.offer(UriFixtures.PAGE, 0);
-        assertEquals(UriFixtures.PAGE, frontier.poll());
+        assertEquals(UriFixtures.PAGE, frontier.pickWork());
     }
 
     @Test
     void shouldBeEmptyAfterPollingAll() {
         frontier.offer(UriFixtures.PAGE, 0);
-        frontier.poll();
+        frontier.pickWork();
         assertTrue(frontier.isEmpty());
     }
 
@@ -59,7 +59,7 @@ public class BfsFrontierTest {
     void shouldNotEnqueueDuplicateUri() {
         frontier.offer(UriFixtures.PAGE, 0);
         frontier.offer(UriFixtures.PAGE, 0);
-        frontier.poll();
+        frontier.pickWork();
         assertTrue(frontier.isEmpty());
     }
 
@@ -75,16 +75,16 @@ public class BfsFrontierTest {
         frontier.offer(UriFixtures.PAGE_B, 0);
         frontier.offer(UriFixtures.PAGE_C, 0);
 
-        assertEquals(UriFixtures.PAGE_A, frontier.poll());
-        assertEquals(UriFixtures.PAGE_B, frontier.poll());
-        assertEquals(UriFixtures.PAGE_C, frontier.poll());
+        assertEquals(UriFixtures.PAGE_A, frontier.pickWork());
+        assertEquals(UriFixtures.PAGE_B, frontier.pickWork());
+        assertEquals(UriFixtures.PAGE_C, frontier.pickWork());
     }
 
     @Test
     void shouldRejectDuplicateEvenAtDifferentDepth() {
         frontier.offer(UriFixtures.PAGE, 0);
         assertFalse(frontier.offer(UriFixtures.PAGE, 1));
-        frontier.poll();
+        frontier.pickWork();
         assertTrue(frontier.isEmpty());
     }
 }

@@ -8,12 +8,23 @@ import java.net.http.HttpResponse;
 import com.webcrawler.domain.port.out.PageFetcher;
 import com.webcrawler.infra.config.HttpClientConfig;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+
 import com.webcrawler.domain.port.out.PageFetchException;
 
 public class HttpPageFetcher implements PageFetcher {
        
     private static final int HTTP_STATUS_OK = 200;
-    private static final Set<Integer> RETRYABLE_STATUSES = Set.of(408, 429, 502, 503, 504);
+    private static final int HTTP_REQUEST_TIMEOUT = 408;
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
+    private static final int HTTP_BAD_GATEWAY = 502;
+    private static final int HTTP_SERVICE_UNAVAILABLE = 503;
+    private static final int HTTP_GATEWAY_TIMEOUT = 504;
+    private static final Set<Integer> RETRYABLE_STATUSES = Set.of(HTTP_REQUEST_TIMEOUT,
+                                                                  HTTP_TOO_MANY_REQUESTS,
+                                                                  HTTP_BAD_GATEWAY,
+                                                                  HTTP_SERVICE_UNAVAILABLE,
+                                                                  HTTP_GATEWAY_TIMEOUT);
     private final HttpClient client;
     private final HttpClientConfig config;
 
@@ -56,7 +67,7 @@ public class HttpPageFetcher implements PageFetcher {
             }
 
             if (attempt < config.maxRetries()) {
-                backoff(attempt);    // ← only sleep if there's a next attempt
+                backoff(attempt);
             }
         }
 
@@ -68,7 +79,8 @@ public class HttpPageFetcher implements PageFetcher {
 
     private void backoff(int attempt) {
         try {
-            Thread.sleep((long) Math.pow(2, attempt) * config.initialBackoffMillis());
+            long jitter = ThreadLocalRandom.current().nextLong(0, (long) Math.pow(2, attempt) * config.initialBackoffMillis());
+            Thread.sleep(jitter);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

@@ -6,9 +6,11 @@ public interface Frontier {
 
     boolean offer(URI uri, int depth);
 
-    URI poll();
-    
+    URI pickWork();
+
     int depthOf(URI uri);
 
     boolean isEmpty();
+
+    default void close() {}
 }

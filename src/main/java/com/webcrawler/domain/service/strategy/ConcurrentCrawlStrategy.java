@@ -66,7 +66,7 @@ public class ConcurrentCrawlStrategy implements CrawlStrategy {
     private List<Callable<Void>> drainWave(Frontier frontier, CrawlScope scope, Semaphore throttle) {
         List<Callable<Void>> tasks = new ArrayList<>();
         URI uri;
-        while ((uri = frontier.poll()) != null) {
+        while ((uri = frontier.pickWork()) != null) {
             var target = uri;
             tasks.add(() -> { processPage(target, frontier, scope, throttle); return null; });
         }
