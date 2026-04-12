@@ -16,19 +16,6 @@ import com.webcrawler.domain.service.PageProcessor;
 import com.webcrawler.domain.util.CrawlScope;
 import com.webcrawler.domain.util.UriNormalizer;
 
-/*
- * Implements a continuous crawl strategy using a bounded thread pool with back-pressure.
- * Unlike the wave-based ConcurrentCrawlStrategy, there is no synchronization barrier between
- * levels — each task immediately submits newly discovered links as new tasks.
- *
- * Back-pressure is achieved via a bounded LinkedBlockingQueue with CallerRunsPolicy:
- * when the queue is full, the submitting thread runs the task inline, naturally throttling
- * the submission rate and preventing unbounded memory growth.
- *
- * Termination is detected via an AtomicInteger (activeTasks): incremented before submit,
- * decremented after all children are submitted. It can only reach zero when the entire
- * reachable graph has been processed.
- */
 public class ContinuousCrawlStrategy implements CrawlStrategy {
 
     private static final Logger LOG = Logger.getLogger(ContinuousCrawlStrategy.class.getName());

@@ -35,7 +35,6 @@ public class HaConcurrentBfsFrontier implements Frontier {
         }
     }
 
-    /** Injects the single cascade sentinel that will propagate to all blocked workers. */
     @Override
     public void close() {
         queue.offer(SENTINEL);
