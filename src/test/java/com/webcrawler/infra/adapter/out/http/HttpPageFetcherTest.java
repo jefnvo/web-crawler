@@ -71,6 +71,6 @@ class HttpPageFetcherTest {
 
         assertThrows(PageFetchException.class, () -> fetcher().fetch(url(wm, "/page")));
 
-        verify(4, getRequestedFor(urlEqualTo("/page"))); // 1 attempt + 3 retries
+        verify(4, getRequestedFor(urlEqualTo("/page")));
     }
 }

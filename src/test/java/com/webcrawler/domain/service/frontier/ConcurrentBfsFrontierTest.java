@@ -29,7 +29,7 @@ public class ConcurrentBfsFrontierTest {
     @Test
     void shouldStartEmpty() {
         assertTrue(frontier.isEmpty());
-        assertNull(frontier.poll());
+        assertNull(frontier.pickWork());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class ConcurrentBfsFrontierTest {
     void shouldNotEnqueueDuplicateUri() {
         frontier.offer(UriFixtures.PAGE, 0);
         frontier.offer(UriFixtures.PAGE, 0);
-        frontier.poll();
+        frontier.pickWork();
         assertTrue(frontier.isEmpty());
     }
 
@@ -74,7 +74,7 @@ public class ConcurrentBfsFrontierTest {
 
         int count = 0;
         while (!frontier.isEmpty()) {
-            frontier.poll();
+            frontier.pickWork();
             count++;
         }
         assertEquals(threadCount, count);
@@ -89,7 +89,7 @@ public class ConcurrentBfsFrontierTest {
             }
         }
 
-        frontier.poll();
+        frontier.pickWork();
         assertTrue(frontier.isEmpty());
     }
 }

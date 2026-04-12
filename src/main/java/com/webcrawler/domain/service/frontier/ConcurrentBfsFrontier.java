@@ -19,7 +19,7 @@ public class ConcurrentBfsFrontier implements Frontier {
     }
 
     @Override
-    public URI poll() {
+    public URI pickWork() {
         return queue.poll();
     }
 
